@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Groepjesmaker.nl — Maak groepen in een handomdraai</title>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Righteous&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --bg: #f0f4ff;
+      --card: #ffffff;
+      --primary: #4f46e5;
+      --primary-light: #818cf8;
+      --accent: #f59e0b;
+      --accent2: #10b981;
+      --danger: #ef4444;
+      --text: #1e1b4b;
+      --muted: #6b7280;
+      --border: #e0e7ff;
+      --shadow: 0 4px 24px rgba(79,70,229,0.10);
+      --radius: 16px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Nunito', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+    #confetti-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1000; }
+    header { background: var(--primary); padding: 0 2rem; display: flex; align-items: center; justify-content: space-between; height: 68px; box-shadow: 0 2px 20px rgba(79,70,229,0.25); position: sticky; top: 0; z-index: 100; }
+    .logo { font-family: 'Righteous', cursive; font-size: 1.6rem; color: #fff; letter-spacing: 1px; display: flex; align-items: center; gap: 10px; }
+    .logo-dot { width: 10px; height: 10px; background: var(--accent); border-radius: 50%; display: inline-block; animation: blink 1.5s ease-in-out infinite; }
+    @keyframes blink { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(0.7); } }
+    .header-sub { color: #c7d2fe; font-size: 0.85rem; font-weight: 600; }
+    main { max-width: 1100px; margin: 0 auto; padding: 2.5rem 1.5rem 4rem; display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; align-items: start; }
+    @media (max-width: 768px) { main { grid-template-columns: 1fr; } }
+    .card { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); padding: 1.8rem; border: 1.5px solid var(--border); animation: slideUp 0.4s ease both; }
+    @keyframes slideUp { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
+    .card-title { font-family: 'Righteous', cursive; font-size: 1.2rem; color: var(--primary); margin-bottom: 1.2rem; display: flex; align-items: center; gap: 8px; }
+    .card-title .icon { font-size: 1.4rem; }
+    .names-textarea { width: 100%; min-height: 200px; border: 2px solid var(--border); border-radius: 12px; padding: 1rem; font-family: 'Nunito', sans-serif; font-size: 1rem; color: var(--text); resize: vertical; transition: border-color 0.2s; background: #fafbff; outline: none; }
+    .names-textarea:focus { border-color: var(--primary-light); background: #fff; }
+    .names-hint { font-size: 0.8rem; color: var(--muted); margin-top: 0.5rem; }
+    .name-count-badge { display: inline-block; background: var(--primary); color: white; font-size: 0.75rem; font-weight: 800; padding: 2px 10px; border-radius: 99px; margin-left: 8px; vertical-align: middle; transition: background 0.2s; }
+    .settings-grid { display: grid; gap: 1.2rem; }
+    .setting-row { display: flex; flex-direction: column; gap: 6px; }
+    label { font-weight: 700; font-size: 0.9rem; color: var(--text); }
+    .toggle-group { display: flex; gap: 8px; }
+    .toggle-btn { flex: 1; padding: 0.55rem 0.5rem; border: 2px solid var(--border); border-radius: 10px; background: #fafbff; font-family: 'Nunito', sans-serif; font-size: 0.9rem; font-weight: 700; color: var(--muted); cursor: pointer; transition: all 0.18s; }
+    .toggle-btn.active { background: var(--primary); border-color: var(--primary); color: white; }
+    .number-input-wrap { display: flex; align-items: center; gap: 10px; }
+    .num-btn { width: 36px; height: 36px; border-radius: 10px; border: 2px solid var(--border); background: #fafbff; font-size: 1.2rem; font-weight: 800; color: var(--primary); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.15s; }
+    .num-btn:hover { background: var(--primary); color: white; border-color: var(--primary); }
+    .num-display { font-size: 1.5rem; font-weight: 900; color: var(--primary); min-width: 40px; text-align: center; }
+    .checkbox-row { display: flex; align-items: center; gap: 10px; cursor: pointer; user-select: none; }
+    .checkbox-row input[type=checkbox] { width: 18px; height: 18px; accent-color: var(--primary); cursor: pointer; }
+    .checkbox-row span { font-weight: 700; font-size: 0.9rem; }
+    .make-btn { width: 100%; padding: 1rem; background: linear-gradient(135deg, var(--primary), var(--primary-light)); color: white; border: none; border-radius: 14px; font-family: 'Righteous', cursive; font-size: 1.25rem; letter-spacing: 1px; cursor: pointer; transition: transform 0.15s, box-shadow 0.15s; box-shadow: 0 4px 20px rgba(79,70,229,0.35); margin-top: 0.5rem; }
+    .make-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(79,70,229,0.45); }
+    .make-btn:active { transform: scale(0.98); }
+    .make-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+    #results-section { grid-column: 1 / -1; display: none; animation: slideUp 0.4s ease both; }
+    #results-section.visible { display: block; }
+    .results-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem; }
+    .results-title { font-family: 'Righteous', cursive; font-size: 1.6rem; color: var(--primary); }
+    .results-actions { display: flex; gap: 0.75rem; flex-wrap: wrap; }
+    .action-btn { padding: 0.5rem 1.1rem; border-radius: 10px; border: 2px solid var(--border); background: white; font-family: 'Nunito', sans-serif; font-weight: 700; font-size: 0.9rem; color: var(--primary); cursor: pointer; transition: all 0.15s; }
+    .action-btn:hover { background: var(--primary); color: white; border-color: var(--primary); }
+    .action-btn.green { background: var(--accent2); color: white; border-color: var(--accent2); }
+    .action-btn.green:hover { opacity: 0.88; }
+    .groups-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1.2rem; }
+    .group-card { background: white; border-radius: 14px; border: 2px solid var(--border); overflow: hidden; box-shadow: 0 2px 12px rgba(79,70,229,0.07); animation: popIn 0.35s ease both; }
+    @keyframes popIn { from { opacity: 0; transform: scale(0.85); } to { opacity: 1; transform: scale(1); } }
+    .group-header { padding: 0.75rem 1rem; font-family: 'Righteous', cursive; font-size: 1rem; color: white; display: flex; align-items: center; justify-content: space-between; }
+    .group-header .count-pill { background: rgba(255,255,255,0.25); border-radius: 99px; padding: 1px 9px; font-size: 0.8rem; font-family: 'Nunito', sans-serif; font-weight: 800; }
+    .group-members { padding: 0.75rem 1rem; display: flex; flex-direction: column; gap: 6px; }
+    .member-chip { display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 0.95rem; padding: 4px 0; border-bottom: 1px solid #f3f4f6; }
+    .member-chip:last-child { border-bottom: none; }
+    .member-avatar { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: 900; color: white; flex-shrink: 0; }
+    footer { text-align: center; padding: 2rem; color: var(--muted); font-size: 0.85rem; }
+    footer a { color: var(--primary); text-decoration: none; font-weight: 700; }
+    .toast { position: fixed; bottom: 2rem; left: 50%; transform: translateX(-50%) translateY(100px); background: #1e1b4b; color: white; padding: 0.75rem 1.5rem; border-radius: 12px; font-weight: 700; font-size: 0.95rem; box-shadow: 0 8px 24px rgba(0,0,0,0.2); transition: transform 0.3s ease; z-index: 999; }
+    .toast.show { transform: translateX(-50%) translateY(0); }
+    .quick-add-row { display: flex; gap: 8px; margin-top: 0.75rem; }
+    .quick-add-input { flex: 1; padding: 0.55rem 0.9rem; border: 2px solid var(--border); border-radius: 10px; font-family: 'Nunito', sans-serif; font-size: 0.95rem; outline: none; transition: border-color 0.2s; }
+    .quick-add-input:focus { border-color: var(--primary-light); }
+    .quick-add-btn { padding: 0.55rem 1rem; background: var(--primary); color: white; border: none; border-radius: 10px; font-family: 'Nunito', sans-serif; font-weight: 800; font-size: 0.95rem; cursor: pointer; transition: opacity 0.15s; }
+    .quick-add-btn:hover { opacity: 0.85; }
+  </style>
+</head>
+<body>
+<canvas id="confetti-canvas"></canvas>
+<header>
+  <div class="logo"><span class="logo-dot"></span>Groepjesmaker<span style="color:var(--accent)">.nl</span></div>
+  <div class="header-sub">✨ Maak groepen in een handomdraai</div>
+</header>
+<main>
+  <div class="card" style="animation-delay:0.05s">
+    <div class="card-title"><span class="icon">👥</span>Namen invoeren<span class="name-count-badge" id="nameCount">0</span></div>
+    <textarea class="names-textarea" id="namesInput" placeholder="Jan&#10;Lisa&#10;Ahmed&#10;Sophie&#10;Daan&#10;Emma&#10;...&#10;&#10;(één naam per regel)"></textarea>
+    <div class="names-hint">Zet elke naam op een nieuwe regel</div>
+    <div class="quick-add-row">
+      <input class="quick-add-input" id="quickAddInput" placeholder="Naam snel toevoegen..." />
+      <button class="quick-add-btn" onclick="quickAdd()">+ Toevoegen</button>
+    </div>
+  </div>
+  <div class="card" style="animation-delay:0.1s">
+    <div class="card-title"><span class="icon">⚙️</span>Instellingen</div>
+    <div class="settings-grid">
+      <div class="setting-row">
+        <label>Verdelen op basis van...</label>
+        <div class="toggle-group">
+          <button class="toggle-btn active" id="modeAantal" onclick="setMode('aantal')">Aantal groepen</button>
+          <button class="toggle-btn" id="modeGrootte" onclick="setMode('grootte')">Groepsgrootte</button>
+        </div>
+      </div>
+      <div class="setting-row" id="settingAantal">
+        <label>Aantal groepen</label>
+        <div class="number-input-wrap">
+          <button class="num-btn" onclick="change('groups', -1)">−</button>
+          <div class="num-display" id="groupsDisplay">3</div>
+          <button class="num-btn" onclick="change('groups', +1)">+</button>
+        </div>
+      </div>
+      <div class="setting-row" id="settingGrootte" style="display:none">
+        <label>Personen per groep</label>
+        <div class="number-input-wrap">
+          <button class="num-btn" onclick="change('size', -1)">−</button>
+          <div class="num-display" id="sizeDisplay">3</div>
+          <button class="num-btn" onclick="change('size', +1)">+</button>
+        </div>
+      </div>
+      <div class="setting-row">
+        <label class="checkbox-row"><input type="checkbox" id="shuffleCheck" checked /><span>🔀 Namen willekeurig schudden</span></label>
+      </div>
+      <div class="setting-row">
+        <label class="checkbox-row"><input type="checkbox" id="balanceCheck" checked /><span>⚖️ Groepen zo gelijk mogelijk</span></label>
+      </div>
+    </div>
+    <button class="make-btn" id="makeBtn" onclick="makeGroups()" disabled>🎲 Maak groepen!</button>
+  </div>
+  <div id="results-section">
+    <div class="card">
+      <div class="results-header">
+        <div class="results-title">🎉 Jouw groepen</div>
+        <div class="results-actions">
+          <button class="action-btn" onclick="makeGroups()">🔄 Opnieuw schudden</button>
+          <button class="action-btn" onclick="copyResults()">📋 Kopiëren</button>
+          <button class="action-btn green" onclick="printResults()">🖨️ Afdrukken</button>
+        </div>
+      </div>
+      <div class="groups-grid" id="groupsGrid"></div>
+    </div>
+  </div>
+</main>
+<footer>Gemaakt met ❤️ · <a href="#">Groepjesmaker.nl</a></footer>
+<div class="toast" id="toast"></div>
+<script>
+  const COLORS = ['#4f46e5','#f59e0b','#10b981','#ef4444','#8b5cf6','#06b6d4','#f97316','#84cc16','#ec4899','#14b8a6','#3b82f6','#a16207'];
+  let mode = 'aantal', groupCount = 3, groupSize = 3;
+  document.getElementById('namesInput').addEventListener('input', updateCount);
+  function updateCount() { const names = getNames(); document.getElementById('nameCount').textContent = names.length; document.getElementById('makeBtn').disabled = names.length < 2; }
+  function getNames() { return document.getElementById('namesInput').value.split('\n').map(n => n.trim()).filter(n => n.length > 0); }
+  function setMode(m) { mode = m; document.getElementById('modeAantal').classList.toggle('active', m === 'aantal'); document.getElementById('modeGrootte').classList.toggle('active', m === 'grootte'); document.getElementById('settingAantal').style.display = m === 'aantal' ? '' : 'none'; document.getElementById('settingGrootte').style.display = m === 'grootte' ? '' : 'none'; }
+  function change(what, delta) { if (what === 'groups') { groupCount = Math.max(2, Math.min(20, groupCount + delta)); document.getElementById('groupsDisplay').textContent = groupCount; } else { groupSize = Math.max(2, Math.min(20, groupSize + delta)); document.getElementById('sizeDisplay').textContent = groupSize; } }
+  function quickAdd() { const inp = document.getElementById('quickAddInput'); const name = inp.value.trim(); if (!name) return; const ta = document.getElementById('namesInput'); ta.value = ta.value.trim() + (ta.value.trim() ? '\n' : '') + name; inp.value = ''; updateCount(); inp.focus(); }
+  document.getElementById('quickAddInput').addEventListener('keydown', e => { if (e.key === 'Enter') quickAdd(); });
+  function shuffle(arr) { const a = [...arr]; for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+  function makeGroups() { let names = getNames(); if (names.length < 2) return; if (document.getElementById('shuffleCheck').checked) { names = shuffle(names); } let numGroups; if (mode === 'aantal') { numGroups = Math.min(groupCount, names.length); } else { numGroups = Math.max(1, Math.ceil(names.length / groupSize)); } const groups = Array.from({ length: numGroups }, () => []); names.forEach((name, i) => { groups[i % numGroups].push(name); }); renderGroups(groups); launchConfetti(); showToast('✅ ' + numGroups + ' groepen aangemaakt!'); }
+  function renderGroups(groups) { const grid = document.getElementById('groupsGrid'); grid.innerHTML = ''; groups.forEach((members, idx) => { const color = COLORS[idx % COLORS.length]; const card = document.createElement('div'); card.className = 'group-card'; card.style.animationDelay = (idx * 0.07) + 's'; card.innerHTML = `<div class="group-header" style="background:${color}"><span>Groep ${idx + 1}</span><span class="count-pill">${members.length} personen</span></div><div class="group-members">${members.map(name => `<div class="member-chip"><div class="member-avatar" style="background:${color}">${name.charAt(0).toUpperCase()}</div>${name}</div>`).join('')}</div>`; grid.appendChild(card); }); const section = document.getElementById('results-section'); section.classList.add('visible'); section.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+  function copyResults() { const grid = document.getElementById('groupsGrid'); const cards = grid.querySelectorAll('.group-card'); let text = ''; cards.forEach((card, i) => { text += `Groep ${i + 1}:\n`; card.querySelectorAll('.member-chip').forEach(chip => { text += '  • ' + chip.textContent.trim() + '\n'; }); text += '\n'; }); navigator.clipboard.writeText(text.trim()).then(() => showToast('📋 Gekopieerd!')); }
+  function printResults() { window.print(); }
+  function showToast(msg) { const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2500); }
+  function launchConfetti() { const canvas = document.getElementById('confetti-canvas'); const ctx = canvas.getContext('2d'); canvas.width = window.innerWidth; canvas.height = window.innerHeight; const pieces = Array.from({ length: 120 }, () => ({ x: Math.random() * canvas.width, y: -10 - Math.random() * 100, w: 8 + Math.random() * 8, h: 4 + Math.random() * 6, color: COLORS[Math.floor(Math.random() * COLORS.length)], vx: (Math.random() - 0.5) * 4, vy: 2 + Math.random() * 4, rot: Math.random() * Math.PI * 2, rotv: (Math.random() - 0.5) * 0.2, opacity: 1 })); let frame = 0; function draw() { ctx.clearRect(0, 0, canvas.width, canvas.height); let alive = false; pieces.forEach(p => { p.x += p.vx; p.y += p.vy; p.rot += p.rotv; if (p.y > canvas.height * 0.7) p.opacity -= 0.02; if (p.opacity > 0) { alive = true; ctx.save(); ctx.globalAlpha = Math.max(0, p.opacity); ctx.translate(p.x, p.y); ctx.rotate(p.rot); ctx.fillStyle = p.color; ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h); ctx.restore(); } }); if (alive && frame < 200) { frame++; requestAnimationFrame(draw); } else ctx.clearRect(0, 0, canvas.width, canvas.height); } draw(); }
+</script>
+</body>
+</html>
